@@ -26,9 +26,19 @@ python3.12 -m venv .venv
 
 Open the loopback address printed by the server. See [the original guide](app/docs/GUIDED_RUN.md) and [trace tools](app/docs/TRACES.md) for details (French).
 
-## Optional WeVisOne integration
+## Optional WeVisOne-VL integration
 
-The bundled adapter targets the separately installed WeVisOne-VL Transformers runtime on Apple Silicon with MPS and BF16. Weights, runtime environment and original upstream code are not included. Set `PCB_WEVISONE_RUNTIME` to the absolute path of this repository's `wevisone-vl` folder, `PCB_WEVISONE_PYTHON` to the separately prepared model environment's Python, and `PCB_WEVISONE_MODELS_DIR` to the folder containing verified model assets. The adapter also requires the `wevisone_vl` Python package and pinned model preparation receipts. The full portable setup is not yet documented or validated on a fresh machine. The CPU pipeline is independent of this optional integration.
+[WeVisOne-VL](https://github.com/Tencent/WeVisOne-VL) is a vision-language model from Tencent's WeChat Vision team. PCB Workbench uses it locally to **propose a board outline, epoxy removal and solder-joint bounding boxes**. These proposals require review. Copper path detection is a separate CPU-based geometric process.
+
+The repository includes an adapter in `wevisone-vl/`, but **does not include the upstream `wevisone_vl` package, model weights or a ready-to-use model environment**. The adapter targets Apple Silicon using PyTorch MPS and BF16, with pinned 2B and 4B model revisions. It runs offline and does not automatically download a model or fall back to another backend.
+
+To use this experimental integration, prepare a separate Python environment with the upstream package and the matching model assets, then configure these environment variables before starting the app:
+
+- `PCB_WEVISONE_RUNTIME`: absolute path to this repository's `wevisone-vl` directory.
+- `PCB_WEVISONE_PYTHON`: absolute path to the Python executable in the prepared model environment.
+- `PCB_WEVISONE_MODELS_DIR`: absolute path to the directory containing the prepared model assets.
+
+The adapter checks specific model revisions and preparation receipts (`preparation.json` for 2B and `download.json` for 4B); downloading the upstream weights alone does not create these receipts. **The full setup and receipt-generation procedure is not yet provided or validated on a fresh machine.** See [the upstream project](https://github.com/Tencent/WeVisOne-VL) for its package and model documentation. The CPU-only workflow above does not require WeVisOne.
 
 ## Persistence
 
