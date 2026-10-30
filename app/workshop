@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+task_root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ ! -x "$task_root/.venv/bin/python" ]; then
+  echo "Environnement absent. Depuis ce dossier : python3.12 -m venv .venv && .venv/bin/python -m pip install --require-hashes -r requirements.lock" >&2
+  exit 2
+fi
+if ! "$task_root/.venv/bin/python" -c 'import PIL, numpy, cv2' >/dev/null 2>&1; then
+  echo "Dépendances absentes ou incomplètes. Installer requirements.lock avec --require-hashes avant de relancer." >&2
+  exit 2
+fi
+if ! command -v node >/dev/null 2>&1; then
+  echo "Node est introuvable. Installer la version indiquée dans .node-version, puis relancer." >&2
+  exit 2
+fi
+export PYTHONPATH="$task_root${PYTHONPATH:+:$PYTHONPATH}"
+exec "$task_root/.venv/bin/python" -m pcb_workshop "$@"

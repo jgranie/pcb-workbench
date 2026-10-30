@@ -1,0 +1,26 @@
+{
+  "tracker-core.mjs": {
+    "source_relative_path": "outputs/photo-pilot/gimp-v2/tracker-core.mjs",
+    "original_sha256": "f1b091d401a9883fe39470880fe0754c607fd687f8ad0f01dca54c51025807e1",
+    "copy_sha256": "d79f3d83dbf581613a8533ebf37030fc7d7c96eabe04f60244ec50600dc008dc",
+    "identical": false
+  },
+  "auto-scan-core.mjs": {
+    "source_relative_path": "outputs/photo-pilot/gimp-v2/auto-scan-core.mjs",
+    "original_sha256": "c53be9386fde1cc2ca7bd4e853c06d5277652866d17fc1c8843351bf0da9beb4",
+    "copy_sha256": "c53be9386fde1cc2ca7bd4e853c06d5277652866d17fc1c8843351bf0da9beb4",
+    "identical": true
+  },
+  "pin-row-core.mjs": {
+    "source_relative_path": "outputs/photo-pilot/gimp-v2/pin-row-core.mjs",
+    "original_sha256": "c6ab327ec5e541222935f1ff84efcbcfe234a3b52e09cf8b9b872d4fa852ea27",
+    "copy_sha256": "c6ab327ec5e541222935f1ff84efcbcfe234a3b52e09cf8b9b872d4fa852ea27",
+    "identical": true
+  },
+  "trace-edit-core.mjs": {
+    "source_relative_path": "outputs/photo-pilot/gimp-v2/trace-edit-core.mjs",
+    "original_sha256": "a5ca0a7dabe35174f607dd544a4a4e82b21e49647b4ee29f667b711afc1634d0",
+    "copy_sha256": "5ad2462e16d0e8840037a05e9d776ca3a410708dc10d3b88594aeb71ff626b8e",
+    "identical": false
+  }
+}

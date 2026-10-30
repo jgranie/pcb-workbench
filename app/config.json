@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "mirror_x": false,
+  "rotate_quarters": 0,
+  "crop": null,
+  "method": "otsu",
+  "adaptive_window": 101,
+  "adaptive_offset": 9,
+  "remove_components_below": 16,
+  "solder_contrast": 13,
+  "solder_min_area": 100,
+  "solder_max_area": 2200,
+  "solder_max_extent": 85,
+  "solder_min_circularity": 0.05,
+  "solder_foreground": "lab",
+  "solder_max_aspect": 3.0,
+  "solder_close_size": 5,
+  "max_candidates": 1500,
+  "allow_photo_gaps": false,
+  "protect_pin_rows": true
+}
