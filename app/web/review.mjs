@@ -1,3 +1,4 @@
+import {displayX, imageX} from './core/mirror-view.mjs';
 import {traceSettings,traceAnchors,mergeTraceScan,filteredTraces,mountTraceSettings} from './traces.mjs';
 import {visibleRoutes,nearestStroke,strokeKey,chainedStrokes,addManualLine,deleteStrokes,logicalSegments} from './core/trace-edit-core.mjs';
 import {mountWevisone} from './wevisone.mjs';
@@ -34,7 +35,7 @@ async function syncCrop(){
 }
 function loadImage(src){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=src;});}
 const canvas=$('canvas'),ctx=canvas.getContext('2d'),container=$('view');
-let zoom=1,offset=[0,0],pointer=null,pending=null,selections=new Map(),padSelection=new Set(),undo=[],redo=[],worker,ready=false,busy=false,modelBlocking=false,solderBlocking=false,source=null,target=null,direction=null,proposed=[],dirty=false,scanStale=false;
+let mirrored=false,zoom=1,offset=[0,0],pointer=null,pending=null,selections=new Map(),padSelection=new Set(),undo=[],redo=[],worker,ready=false,busy=false,modelBlocking=false,solderBlocking=false,source=null,target=null,direction=null,proposed=[],dirty=false,scanStale=false;
 let solderView={section:null,only:false},toolMode='pan',activeDomain='solders',workerKey=null,queuedRequest=null,workerTimer=null,tracePhase='',traceNotice='',lastReviewKey='';
 const getTraceSettings=()=>traceSettings(workspace.traceSettings);
 function setTool(mode,domain='traces'){toolMode=mode;activeDomain=domain;pending=null;selections.clear();padSelection.clear();if(mode==='follow')$('traceFollowPanel').open=true;render();}
@@ -48,11 +49,11 @@ function allPads(){return [...currentCandidates(),...workspace.objects.filter(o=
 function pads(){const core=solderViewCore();return allPads().filter(p=>inSolderCore(p,core));}
 function displayScan(){return scanStale?{...workspace.traceScan,routes:workspace.traceScan.routes.filter(r=>r.origin!=='automatic')}:workspace.traceScan;}
 function nearestPad(p){let best=null;for(const a of pads()){const d=Math.hypot(a.x-p[0],a.y-p[1]);if(d<Math.max(12,8/zoom)&&(!best||d<best.d))best={...a,d};}return best;}
-function world(event){const r=canvas.getBoundingClientRect();return[(event.clientX-r.left-offset[0])/zoom,(event.clientY-r.top-offset[1])/zoom].map((v,i)=>Math.max(0,Math.min((i?meta.height:meta.width)-.001,v)));}
+function world(event){const r=canvas.getBoundingClientRect(),x=(event.clientX-r.left-offset[0])/zoom,y=(event.clientY-r.top-offset[1])/zoom;return [imageX(x,meta.width,mirrored),y].map((v,i)=>Math.max(0,Math.min((i?meta.height:meta.width)-.001,v)));}
 function fit(){zoom=Math.min(container.clientWidth/meta.width,container.clientHeight/meta.height)*.96;offset=[(container.clientWidth-meta.width*zoom)/2,(container.clientHeight-meta.height*zoom)/2];render();}
 function render(){
   const dpr=devicePixelRatio;canvas.width=container.clientWidth*dpr;canvas.height=container.clientHeight*dpr;
-  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.translate(...offset);ctx.scale(zoom,zoom);
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.translate(...offset);ctx.scale(zoom,zoom);if(mirrored){ctx.translate(meta.width,0);ctx.scale(-1,1);}
   if(modelPreview||$('showOriginal').checked)ctx.drawImage(image,0,0);
   if($('showCrop').checked&&cropImage&&!modelPreview)ctx.drawImage(cropImage,0,0);
   if(modelPreview)ctx.drawImage(modelPreview,0,0);
@@ -62,7 +63,7 @@ function render(){
     ctx.strokeStyle=r.origin!=='automatic'?'#3687ff':r.gaps.length?'#ffad22':r.broad?'#ce79ee':'#ffdc4d';ctx.lineWidth=2/zoom;ctx.setLineDash(r.gaps.length?[5/zoom,4/zoom]:[]);ctx.beginPath();r.points.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.stroke();ctx.setLineDash([]);
   }}
   if(!modelPreview)for(const span of selections.values()){const r=workspace.traceScan.routes.find(r=>r.id===span.routeId);if(!r)continue;ctx.strokeStyle='#ff623a';ctx.lineWidth=5/zoom;ctx.beginPath();r.points.slice(span.start,span.end+1).forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.stroke();}
-  if($('showPads').checked&&!modelPreview)for(const [padIndex,a] of pads().entries()){ctx.strokeStyle=padSelection.has(a.id)||a.id===source?'#ff7849':a.id===target?'#fbe454':'#39e5d4';ctx.lineWidth=1.2/zoom;ctx.beginPath();ctx.arc(a.x,a.y,Math.max(4,3/zoom),0,2*Math.PI);if(a.origin==='manual'){ctx.fillStyle=padSelection.has(a.id)?'#ff7849':'#3687ff';ctx.fill();}ctx.stroke();if(zoom>.65){ctx.font=`${10/zoom}px system-ui`;ctx.fillStyle=ctx.strokeStyle;ctx.fillText(a.origin==='manual'?a.id.slice(4):String(padIndex+1),a.x+6/zoom,a.y-4/zoom);}}
+  if($('showPads').checked&&!modelPreview)for(const [padIndex,a] of pads().entries()){ctx.strokeStyle=padSelection.has(a.id)||a.id===source?'#ff7849':a.id===target?'#fbe454':'#39e5d4';ctx.lineWidth=1.2/zoom;ctx.beginPath();ctx.arc(a.x,a.y,Math.max(4,3/zoom),0,2*Math.PI);if(a.origin==='manual'){ctx.fillStyle=padSelection.has(a.id)?'#ff7849':'#3687ff';ctx.fill();}ctx.stroke();if(zoom>.65){ctx.font=`${10/zoom}px system-ui`;ctx.fillStyle=ctx.strokeStyle;ctx.save();ctx.translate(a.x,a.y);if(mirrored)ctx.scale(-1,1);ctx.fillText(a.origin==='manual'?a.id.slice(4):String(padIndex+1),6/zoom,-4/zoom);ctx.restore();}}
   if(pending){ctx.fillStyle='#388dff';ctx.beginPath();ctx.arc(...pending,5/zoom,0,2*Math.PI);ctx.fill();}
   const visible=$('showRoutes').checked?visibleRoutes(displayScan()).length:0;
   $('summary').textContent=(scope?`${pads().length} points dans la section · ${allPads().length} au total`:`${allPads().length} candidats`)+` · ${visible} tracés visibles · ${workspace.traceScan.issues.length} diagnostics${scanStale&&workspace.traceScan.routes.length?' · tracés périmés':''}${receipt.status==='partial_proposals'?' · ESSAI PARTIEL':''}`;
@@ -217,6 +218,7 @@ $('openFile').onchange=async()=>{
     await syncCrop();message('Travail ouvert · '+file.name);render();
   }catch(error){message('Ouverture refusée · '+error.message);}finally{$('openFile').value='';modelBlocking=false;render();}
 };
+$('mirror').onclick=()=>{mirrored=!mirrored;$('mirror').setAttribute('aria-pressed',String(mirrored));render();};
 $('fit').onclick=fit;
 for(const [id,key] of [['showOriginal','original'],['showCrop','crop'],['showPads','pads'],['showRoutes','routes']])$(id).onchange=()=>{
   history();workspace.layerVisibility??={original:!cropImage,crop:!!cropImage,pads:true,routes:true};workspace.layerVisibility[key]=$(id).checked;render();
@@ -273,7 +275,7 @@ function renderTracePanel(){
 function locateTrace(route){
   if(!route)return;activeDomain='traces';toolMode='stroke';padSelection.clear();selections.clear();for(const span of logicalSegments(route.points))selections.set(strokeKey({routeId:route.id,...span}),{routeId:route.id,...span});
   const xs=route.points.map(p=>p[0]),ys=route.points.map(p=>p[1]),x=Math.min(...xs),y=Math.min(...ys),w=Math.max(...xs)-x,h=Math.max(...ys)-y;
-  zoom=Math.min(3,container.clientWidth/(w+100),container.clientHeight/(h+100));offset=[container.clientWidth/2-(x+w/2)*zoom,container.clientHeight/2-(y+h/2)*zoom];render();
+  zoom=Math.min(3,container.clientWidth/(w+100),container.clientHeight/(h+100));offset=[container.clientWidth/2-displayX(x+w/2,meta.width,mirrored)*zoom,container.clientHeight/2-(y+h/2)*zoom];render();
 }
 $('tracePan').onclick=()=>setTool('pan');$('traceSelect').onclick=()=>setTool('stroke');$('traceLine').onclick=()=>setTool('line');
 $('traceFollow').onclick=()=>{source=null;target=null;direction=null;proposed=[];$('directions').replaceChildren();setTool('follow');$('followInfo').textContent=followText();message('Choisir le départ puis l’arrivée sur la carte.');};

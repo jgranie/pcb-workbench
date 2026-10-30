@@ -14,3 +14,5 @@ dialog{background:#233a38;color:#edf4ee;border:1px solid #7e9c8e;border-radius:8
 #tracePanel .trace-secondary{border-top:1px solid #526b60;margin-top:12px;padding-top:10px}#tracePanel .trace-secondary>summary{font-size:12px;cursor:pointer;color:#c8dacf}#tracePanel .trace-secondary select{display:block;width:100%;margin-top:8px;font-size:12px}#tracePanel .trace-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}#tracePanel .trace-actions button,#tracePanel #finish{font-size:12px;padding:6px 8px}#tracePanel .trace-actions button[aria-pressed=true]{background:#90c6b2;outline:1px solid #b7e7dc}#tracePanel [hidden]{display:none!important}#traceStatus,#selection,#traceReviewStatus,#followInfo{font-size:12px;margin:9px 0}#traceHelp{margin-top:8px;border-bottom:1px solid #526b60;padding-bottom:10px}#traceSettingsDialog input[type=checkbox]{width:auto}#traceSettingsReset{margin-right:auto}#traceSettingsStatus{color:#ffd49e}
 
 #tracePanel .trace-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+
+#mirror[aria-pressed=true]{background:#38564c;outline:1px solid #b7e7dc}
